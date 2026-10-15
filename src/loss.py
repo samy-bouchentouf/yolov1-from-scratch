@@ -8,11 +8,11 @@ no-object confidence penalization, and classification.
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 S = 7
 B = 2
-C = 20
 LAMBDA_COORD = 5.0
 LAMBDA_NOOBJ = 0.5
 
@@ -36,13 +36,8 @@ def wh_loss(predictions, targets, responsible):
     ).sum()
 
 
-def object_confidence_loss(pred_conf, target_conf, responsible):
-    """Compute confidence loss for responsible predictors."""
-    return ((pred_conf - target_conf).square() * responsible).sum()
-
-
 def no_object_confidence_loss(pred_conf, no_object_mask):
-    """Penalize confidence predictions for non-responsible predictors."""
+    """Penalize confidence predictions for non-responsible boxes."""
     return (pred_conf.square() * no_object_mask).sum()
 
 
@@ -65,8 +60,8 @@ class YOLOv1Loss(nn.Module):
     def forward(self, predictions, targets):
         """
         Args:
-            predictions: Tensor of shape (N, 7, 7, 30).
-            targets: Tensor of shape (N, 7, 7, 30).
+            predictions: Tensor of shape (N, S, S, 30).
+            targets: Tensor of shape (N, S, S, 30).
 
         Returns:
             Scalar loss.
@@ -84,10 +79,10 @@ class YOLOv1Loss(nn.Module):
         )
         target_xywh = target_boxes[..., :4]
 
-        # A cell contains an object if its class vector is nonzero
+        # Identify cells containing objects
         object_mask = (targets[..., 10:30].sum(dim=-1) > 0).float()
 
-        # Convert cell-relative centers to image-relative coordinates
+        # Convert cell-relative centers to image-relative coordinates for IoU
         device = predictions.device
         rows = torch.arange(S, device=device).view(1, S, 1, 1)
         cols = torch.arange(S, device=device).view(1, 1, S, 1)
@@ -104,7 +99,7 @@ class YOLOv1Loss(nn.Module):
         pred_wh = pred_xywh[..., 2:4].clamp(min=0)
         target_wh = target_xywh[..., 2:4]
 
-        # Compute IoU in image coordinates
+        # Compute IoU
         pred_min = pred_xy - pred_wh / 2
         pred_max = pred_xy + pred_wh / 2
         target_min = target_xy - target_wh / 2
@@ -118,23 +113,20 @@ class YOLOv1Loss(nn.Module):
         pred_area = pred_wh[..., 0] * pred_wh[..., 1]
         target_area = target_wh[..., 0] * target_wh[..., 1]
         union = pred_area + target_area - intersection
-
         iou = intersection / (union + 1e-6)
 
-        # Select the predictor with the highest IoU in each object cell
+        # Assign responsibility to the box with the highest IoU
         responsible_idx = iou.argmax(dim=-1)
-        responsible = torch.nn.functional.one_hot(
-            responsible_idx, num_classes=B
-        ).float() * object_mask.unsqueeze(-1)
+        responsible = F.one_hot(responsible_idx, num_classes=B).float()
+        responsible = responsible * object_mask.unsqueeze(-1)
 
-        # Localization loss still uses the original cell-relative targets
-        coord_loss = xy_loss(
-            pred_xywh, target_xywh, responsible
-        ) + wh_loss(
-            pred_xywh, target_xywh, responsible
+        # Localization loss
+        coord_loss = (
+            xy_loss(pred_xywh, target_xywh, responsible)
+            + wh_loss(pred_xywh, target_xywh, responsible)
         )
 
-        # Responsible predictor's confidence target is its detached IoU
+        # Confidence loss for responsible boxes, with IoU as target
         responsible_iou = (iou.detach() * responsible).sum(dim=-1)
         responsible_conf = (pred_conf * responsible).sum(dim=-1)
 
@@ -142,16 +134,14 @@ class YOLOv1Loss(nn.Module):
             (responsible_conf - responsible_iou).square() * object_mask
         ).sum()
 
-        # All non-responsible predictors receive a no-object penalty
+        # Penalize all non-responsible boxes
         no_object_mask = 1.0 - responsible
         noobj_conf_loss = no_object_confidence_loss(
             pred_conf, no_object_mask
         )
 
-        # Classification loss is calculated once per object cell
-        class_loss = classification_loss(
-            predictions, targets, object_mask
-        )
+        # Classification loss
+        class_loss = classification_loss(predictions, targets, object_mask)
 
         total_loss = (
             LAMBDA_COORD * coord_loss
