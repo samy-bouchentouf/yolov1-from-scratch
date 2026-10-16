@@ -108,7 +108,7 @@ The training pipeline is implemented in `src/train.py`, with an interactive note
 
 The current training configuration uses:
 - Input resolution: \(448 \times 448\)
-- Batch size: 8
+- Batch size: 16
 - Number of epochs: 100
 - Optimizer: SGD
 - Initial learning rate: \(10^{-3}\)
