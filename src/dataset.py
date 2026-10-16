@@ -67,7 +67,13 @@ def get_cell(x_center, y_center):
 
 
 def encode_target(objects, image_width, image_height):
-    """Encode VOC objects into a YOLOv1 target of shape (S, S, 30)."""
+    """Encode VOC objects into a YOLOv1 target of shape (S, S, 30).
+
+    If multiple objects fall into the same grid cell, the last object
+    overwrites the previous target. This implementation keeps only
+    one object per cell, as the target format contains a single class
+    vector per cell.
+    """
     target = torch.zeros((S, S, B * 5 + C), dtype=torch.float32)
 
     for obj in objects:
@@ -86,7 +92,8 @@ def encode_target(objects, image_width, image_height):
         x_cell = x_center * S - col
         y_cell = y_center * S - row
 
-        # YOLOv1 target: both boxes share the same ground truth
+        # If multiple objects share a cell, the last one overwrites
+        # the previous target. Both boxes share the same ground truth.
         target[row, col, 0:5] = torch.tensor(
             [x_cell, y_cell, box_width, box_height, 1.0]
         )
@@ -94,7 +101,8 @@ def encode_target(objects, image_width, image_height):
             [x_cell, y_cell, box_width, box_height, 1.0]
         )
 
-        # One-hot class vector
+        # Reset the class vector to preserve one-hot encoding
+        target[row, col, 10:] = 0
         target[row, col, 10 + class_id] = 1.0
 
     return target
