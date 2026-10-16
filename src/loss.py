@@ -1,4 +1,3 @@
-
 """YOLOv1 loss function.
 
 Implements the multi-part loss used to train YOLOv1, including
