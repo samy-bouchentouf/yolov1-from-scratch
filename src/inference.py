@@ -1,4 +1,3 @@
-
 """Inference utilities for YOLOv1.
 
 Decodes model predictions, filters low-confidence detections,
@@ -11,32 +10,38 @@ import torch
 S = 7
 B = 2
 C = 20
+IMAGE_SIZE = 448
+CONF_THRESHOLD = 0.25
+IOU_THRESHOLD = 0.5
 
 
-def decode_predictions(prediction, conf_threshold=0.25):
+def decode_predictions(prediction, conf_threshold=CONF_THRESHOLD):
     """Decode one (7, 7, 30) prediction into class-specific detections.
 
-    Returns detections with class_id, score, and normalized
-    bounding boxes in (x_center, y_center, width, height) format.
+    Returns detections with class_id, score, and bounding boxes in
+    pixel coordinates on the resized IMAGE_SIZE x IMAGE_SIZE image.
+    Boxes use the (x_center, y_center, width, height) format.
     """
     detections = []
 
     for row in range(S):
         for col in range(S):
             cell = prediction[row, col]
-            class_probs = cell[10:30]
+            class_scores = cell[10:30]
 
             for box_idx in range(B):
                 start = box_idx * 5
                 x_cell, y_cell, w, h, confidence = cell[start:start + 5]
 
-                x = (col + x_cell.item()) / S
-                y = (row + y_cell.item()) / S
-                width = w.item()
-                height = h.item()
+                x = (col + x_cell.item()) / S * IMAGE_SIZE
+                y = (row + y_cell.item()) / S * IMAGE_SIZE
+                width = w.item() * IMAGE_SIZE
+                height = h.item() * IMAGE_SIZE
+                if width <= 0 or height <= 0:
+                    continue
 
                 for class_id in range(C):
-                    score = confidence.item() * class_probs[class_id].item()
+                    score = confidence.item() * class_scores[class_id].item()
 
                     if score < conf_threshold:
                         continue
@@ -105,12 +110,12 @@ def non_max_suppression(detections, iou_threshold=0.5):
     )
 
 
-def predict(net, images, conf_threshold=0.25, iou_threshold=0.5):
+def predict(net, images, conf_threshold=CONF_THRESHOLD, iou_threshold=IOU_THRESHOLD):
     """Run inference on a batch of images.
 
     Args:
         net: YOLOv1 model.
-        images: Tensor of shape (N, 3, 448, 448).
+        images: Tensor of shape (N, 3, 448, 448), on the same device as net.
         conf_threshold: Minimum confidence score.
         iou_threshold: IoU threshold for NMS.
 

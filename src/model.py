@@ -8,7 +8,7 @@ probabilities for each grid cell.
 import torch
 from torch import nn
 
-# input_shape = (N, 448, 448, 3)
+# input_shape = (N, 3, 448, 448)
 # output_shape = (N, 7, 7, 30)
 
 class YOLOv1(nn.Module):
