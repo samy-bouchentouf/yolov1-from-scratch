@@ -14,38 +14,38 @@ C = 20
 
 
 def decode_predictions(prediction, conf_threshold=0.25):
-    """Decode one (7, 7, 30) prediction into bounding boxes.
+    """Decode one (7, 7, 30) prediction into class-specific detections.
 
-    Returns a list of detections with class_id, score, and box.
-    Box coordinates are normalized (x_center, y_center, width, height).
+    Returns detections with class_id, score, and normalized
+    bounding boxes in (x_center, y_center, width, height) format.
     """
     detections = []
 
     for row in range(S):
         for col in range(S):
             cell = prediction[row, col]
-
-            class_scores = cell[10:30]
-            class_id = int(torch.argmax(class_scores))
-            class_score = class_scores[class_id].item()
+            class_probs = cell[10:30]
 
             for box_idx in range(B):
                 start = box_idx * 5
                 x_cell, y_cell, w, h, confidence = cell[start:start + 5]
 
-                score = confidence.item() * class_score
-
-                if score < conf_threshold:
-                    continue
-
                 x = (col + x_cell.item()) / S
                 y = (row + y_cell.item()) / S
+                width = w.item()
+                height = h.item()
 
-                detections.append({
-                    "class_id": class_id,
-                    "score": score,
-                    "box": (x, y, w.item(), h.item()),
-                })
+                for class_id in range(C):
+                    score = confidence.item() * class_probs[class_id].item()
+
+                    if score < conf_threshold:
+                        continue
+
+                    detections.append({
+                        "class_id": class_id,
+                        "score": score,
+                        "box": (x, y, width, height),
+                    })
 
     return detections
 
