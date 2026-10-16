@@ -9,7 +9,7 @@ import os
 import torch
 from torch.utils.data import DataLoader
 
-from model import model
+from model import YOLOv1
 from dataset import VOCDataset
 from loss import YOLOv1Loss
 
@@ -48,7 +48,7 @@ val_loader = DataLoader(
 )
 
 # Model, loss, optimizer
-net = model().to(device)
+net = YOLOv1().to(device)
 criterion = YOLOv1Loss()
 
 optimizer = torch.optim.SGD(

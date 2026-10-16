@@ -8,10 +8,10 @@ probabilities for each grid cell.
 import torch
 from torch import nn
 
-input_shape = (1, 448, 448, 3)
-output_shape = (1, 7, 7, 30)
+# input_shape = (N, 448, 448, 3)
+# output_shape = (N, 7, 7, 30)
 
-class model(nn.Module):
+class YOLOv1(nn.Module):
 
     def __init__(self):
         super().__init__()
@@ -29,14 +29,22 @@ class model(nn.Module):
         self.conv3_4 = nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1)
 
         # fourth block
-        self.conv4_1 = nn.Conv2d(512, 256, kernel_size=1, stride=1, padding=0)
-        self.conv4_2 = nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1) # 1 and 2 repeated four times
+        self.conv4_1_1 = nn.Conv2d(512, 256, kernel_size=1, stride=1, padding=0)
+        self.conv4_2_1 = nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1)
+        self.conv4_1_2 = nn.Conv2d(512, 256, kernel_size=1, stride=1, padding=0)
+        self.conv4_2_2 = nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1)
+        self.conv4_1_3 = nn.Conv2d(512, 256, kernel_size=1, stride=1, padding=0)
+        self.conv4_2_3 = nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1)
+        self.conv4_1_4 = nn.Conv2d(512, 256, kernel_size=1, stride=1, padding=0)
+        self.conv4_2_4 = nn.Conv2d(256, 512, kernel_size=3, stride=1, padding=1)
         self.conv4_3 = nn.Conv2d(512, 512, kernel_size=1, stride=1, padding=0)
         self.conv4_4 = nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1)
 
         # fifth block
-        self.conv5_1 = nn.Conv2d(1024, 512, kernel_size=1, stride=1, padding=0)
-        self.conv5_2 = nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1) # 1 and 2 repeated two times
+        self.conv5_1_1 = nn.Conv2d(1024, 512, kernel_size=1, stride=1, padding=0)
+        self.conv5_2_1 = nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1)
+        self.conv5_1_2 = nn.Conv2d(1024, 512, kernel_size=1, stride=1, padding=0)
+        self.conv5_2_2 = nn.Conv2d(512, 1024, kernel_size=3, stride=1, padding=1)
         self.conv5_3 = nn.Conv2d(1024, 1024, kernel_size=3, stride=1, padding=1)
         self.conv5_4 = nn.Conv2d(1024, 1024, kernel_size=3, stride=2, padding=1)
 
@@ -53,6 +61,9 @@ class model(nn.Module):
 
         # pooling
         self.pooling = nn.MaxPool2d(kernel_size=2, stride=2)
+
+        # dropout
+        self.dropout = nn.Dropout(p=0.5)
 
 
     def forward(self, x):
@@ -73,23 +84,23 @@ class model(nn.Module):
         x = self.pooling(x)
 
         # fourth block
-        x = self.activation(self.conv4_1(x))
-        x = self.activation(self.conv4_2(x))
-        x = self.activation(self.conv4_1(x))
-        x = self.activation(self.conv4_2(x))
-        x = self.activation(self.conv4_1(x))
-        x = self.activation(self.conv4_2(x))
-        x = self.activation(self.conv4_1(x))
-        x = self.activation(self.conv4_2(x))
+        x = self.activation(self.conv4_1_1(x))
+        x = self.activation(self.conv4_2_1(x))
+        x = self.activation(self.conv4_1_2(x))
+        x = self.activation(self.conv4_2_2(x))
+        x = self.activation(self.conv4_1_3(x))
+        x = self.activation(self.conv4_2_3(x))
+        x = self.activation(self.conv4_1_4(x))
+        x = self.activation(self.conv4_2_4(x))
         x = self.activation(self.conv4_3(x))
         x = self.activation(self.conv4_4(x))
         x = self.pooling(x)
 
         # fifth block
-        x = self.activation(self.conv5_1(x))
-        x = self.activation(self.conv5_2(x))
-        x = self.activation(self.conv5_1(x))
-        x = self.activation(self.conv5_2(x))
+        x = self.activation(self.conv5_1_1(x))
+        x = self.activation(self.conv5_2_1(x))
+        x = self.activation(self.conv5_1_2(x))
+        x = self.activation(self.conv5_2_2(x))
         x = self.activation(self.conv5_3(x))
         x = self.activation(self.conv5_4(x))
 
@@ -100,6 +111,7 @@ class model(nn.Module):
         # conn layers
         x = torch.flatten(x, start_dim=1)
         x = self.activation(self.conn_layer1(x))
+        x = self.dropout(x)
         x = self.conn_layer2(x)
         x = x.reshape(-1, 7, 7, 30)
 
