@@ -13,8 +13,8 @@ from dataset import VOCDataset
 from loss import YOLOv1Loss
 
 # Configuration
-EPOCHS = 100
-BATCH_SIZE = 16
+EPOCHS = 20
+BATCH_SIZE = 24
 LEARNING_RATE = 1e-4
 
 voc2007_dir = "data/VOCdevkit/VOC2007"

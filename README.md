@@ -112,7 +112,7 @@ The current training configuration uses:
 |---|---|
 | Input resolution | `448 × 448` |
 | Batch size | 24 |
-| Number of epochs | 50 |
+| Number of epochs | 20 |
 | Optimizer | SGD |
 | Initial learning rate | `1e-4` |
 | Momentum | `0.9` |
