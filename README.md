@@ -1,4 +1,3 @@
-
 # YOLOv1 from Scratch
 
 A PyTorch implementation of YOLOv1 built from scratch for object detection on the PASCAL VOC dataset.
