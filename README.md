@@ -109,9 +109,9 @@ The current training configuration uses:
 - Batch size: 24
 - Number of epochs: 50
 - Optimizer: SGD
-- Initial learning rate: \(10^{-4}\)
-- Momentum: 0.9
-- Weight decay: \(5 \times 10^{-4}\)
+- Initial learning rate: `1e-4`
+- Momentum: `0.9`
+- Weight decay: `5e-4`
 
 Training uses VOC 2007 and VOC 2012 training images, with VOC 2012 validation images used to monitor validation loss.
 
