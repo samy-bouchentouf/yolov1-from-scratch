@@ -117,7 +117,7 @@ Training uses VOC 2007 and VOC 2012 training images, with VOC 2012 validation im
 
 The best model is saved to `checkpoints/yolov1_best.pth` when the validation loss improves.
 
-A CUDA-enabled GPU is recommended to speed up training. Google Colab can be used by enabling a GPU runtime and cloning the repository.
+A CUDA-enabled GPU is recommended to speed up training.
 
 ## Inference
 
