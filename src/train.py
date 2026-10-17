@@ -15,7 +15,7 @@ from loss import YOLOv1Loss
 # Configuration
 EPOCHS = 100
 BATCH_SIZE = 16
-LEARNING_RATE = 1e-3
+LEARNING_RATE = 1e-4
 
 voc2007_dir = "data/VOCdevkit/VOC2007"
 voc2012_dir = "data/VOCdevkit/VOC2012"

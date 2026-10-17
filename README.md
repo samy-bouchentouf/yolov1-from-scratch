@@ -22,17 +22,13 @@ This project implements a YOLOv1-style architecture from random initialization, 
 
 ## Architecture
 
-The model takes a \(448 \times 448\) RGB image as input and produces a \(7 \times 7 \times 30\) prediction tensor.
+The model takes a `448 × 448` RGB image as input and produces a `7 × 7 × 30` prediction tensor.
 
 Each grid cell predicts:
 - 2 bounding boxes, each containing 4 coordinates and 1 confidence score
 - 20 class probabilities
 
-The output size follows:
-
-\[
-7 \times 7 \times (2 \times 5 + 20) = 7 \times 7 \times 30
-\]
+The output size is `7 × 7 × (2 × 5 + 20) = 7 × 7 × 30`.
 
 The network consists of convolutional layers followed by fully connected layers, with Leaky ReLU activations.
 
@@ -59,7 +55,7 @@ data/
         └── ImageSets/
 ```
 
-Images are resized to \(448 \times 448\), and annotations are encoded into a \(7 \times 7 \times 30\) target tensor.
+Images are resized to `448 × 448`, and annotations are encoded into a `7 × 7 × 30` target tensor.
 
 ## Project Structure
 
@@ -82,6 +78,7 @@ yolov1-from-scratch/
 │   ├── model.py
 │   └── train.py
 ├── ARCHITECTURE.md
+├── requirements.txt
 └── README.md
 ```
 
@@ -97,7 +94,7 @@ cd yolov1-from-scratch
 Install the required Python packages:
 
 ```bash
-pip install torch torchvision pillow numpy matplotlib
+pip install -r requirements.txt
 ```
 
 Make sure the PASCAL VOC dataset is available in the expected `data/VOCdevkit/` directory before training.
@@ -107,11 +104,12 @@ Make sure the PASCAL VOC dataset is available in the expected `data/VOCdevkit/` 
 The training pipeline is implemented in `src/train.py`, with an interactive notebook available in `notebooks/train.ipynb`.
 
 The current training configuration uses:
-- Input resolution: \(448 \times 448\)
-- Batch size: 16
-- Number of epochs: 100
+
+- Input resolution: `448 × 448`
+- Batch size: 24
+- Number of epochs: 50
 - Optimizer: SGD
-- Initial learning rate: \(10^{-3}\)
+- Initial learning rate: \(10^{-4}\)
 - Momentum: 0.9
 - Weight decay: \(5 \times 10^{-4}\)
 
@@ -126,6 +124,7 @@ A CUDA-enabled GPU is recommended to speed up training. Google Colab can be used
 The inference pipeline is implemented in `src/inference.py` and can be explored in `notebooks/inference.ipynb`.
 
 It includes:
+
 1. Loading the trained model checkpoint.
 2. Running a forward pass on input images.
 3. Decoding the predicted bounding boxes and class scores.
