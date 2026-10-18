@@ -25,6 +25,8 @@ This project implements a YOLOv1-style architecture trained from random initiali
 
 The model takes a `448 × 448` RGB image as input and produces a `7 × 7 × 30` prediction tensor.
 
+![YOLOv1 Architecture](assets/yolov1_architecture.png)
+
 The image is divided into a `7 × 7` grid. Each grid cell predicts:
 
 - 2 bounding boxes, each represented by 4 coordinates and 1 confidence score
